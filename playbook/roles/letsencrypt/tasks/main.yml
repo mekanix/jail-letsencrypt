@@ -1,0 +1,48 @@
+---
+- name: install packages
+  with_items: "{{ letsencrypt_packages }}"
+  pkgng:
+    name: "{{ item.name }}"
+
+- name: create per-domain config root
+  file:
+    path: /usr/local/etc/dehydrated/conf.d
+    state: directory
+
+- name: copy letsencrypt config
+  copy:
+    src: config
+    dest: /usr/local/etc/dehydrated/config
+
+- name: create consul-template directory for letsencrypt
+  file:
+    path: "{{ consul_template_root }}/{{ letsencrypt_consul_template_prefix }}"
+    state: directory
+
+- name: copy letsencrypt consul-template files
+  with_items: "{{ letsencrypt_consul_templates }}"
+  copy:
+    src: "{{ item.filename }}"
+    dest: "{{ consul_template_root }}/{{ letsencrypt_consul_template_prefix }}/{{ item.filename }}"
+
+- name: copy letsencrypt hook
+  with_items: "{{ letsencrypt_hook }}"
+  copy:
+    src: "{{ item.filename }}"
+    dest: "{{ item.destination }}/{{ item.filename }}"
+    mode: 0700
+
+- name: create consul-template dir
+  file:
+    path: /usr/local/etc/consul-template.d
+    state: directory
+
+- name: configure consul-template for letsencrypt
+  template:
+    src: letsencrypt.consul.j2
+    dest: /usr/local/etc/consul-template.d/letsencrypt.conf
+
+- name: register letsencrypt
+  command: dehydrated --register --accept-terms
+  args:
+    creates: /usr/local/bin/accounts

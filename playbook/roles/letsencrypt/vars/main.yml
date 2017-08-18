@@ -1,0 +1,18 @@
+---
+consul_template_root: /usr/local/etc/consul-templates
+
+letsencrypt_packages:
+  - name: consul-template
+  - name: curl
+  - name: dehydrated
+  - name: py27-dns-lexicon
+
+letsencrypt_consul_template_prefix: letsencrypt
+
+letsencrypt_consul_templates:
+  - destination: /usr/local/etc/periodic/weekly/900-dehydrated
+    filename: 900-dehydrated.tpl
+
+letsencrypt_hook:
+  - destination: /usr/local/etc/dehydrated
+    filename: hook.sh
