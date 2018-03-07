@@ -1,6 +1,4 @@
 ---
-consul_template_root: /usr/local/etc/consul-templates
-
 letsencrypt_packages:
   - name: consul-template
   - name: curl
