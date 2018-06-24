@@ -1,0 +1,10 @@
+# -*- mode: ansible -*-
+# vi: set ft=ansible :
+
+---
+- name: letsencrypt provisioning
+  hosts: letsencrypt
+  roles:
+    - onelove-roles.freebsd-common
+    - onelove-roles.freebsd-consul-template
+    - letsencrypt

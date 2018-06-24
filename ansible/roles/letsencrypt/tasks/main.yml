@@ -46,3 +46,10 @@
   command: dehydrated --register --accept-terms
   args:
     creates: /usr/local/bin/accounts
+
+- name: setup letsencrypt cron
+  cron:
+    name: "letsencrypt"
+    special_time: weekly
+    job: "/usr/local/etc/periodic/weekly/900-dehydrated"
+
