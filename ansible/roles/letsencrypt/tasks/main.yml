@@ -1,7 +1,7 @@
 ---
 - name: install packages
   with_items: "{{ letsencrypt_packages }}"
-  pkgng:
+  package:
     name: "{{ item.name }}"
 
 - name: create per-domain config root
@@ -9,21 +9,21 @@
     path: /usr/local/etc/dehydrated/conf.d
     state: directory
 
+- name: create certs directory
+  file:
+    path: /usr/local/etc/dehydrated/certs
+    state: directory
+
 - name: copy letsencrypt config
   copy:
     src: config
     dest: /usr/local/etc/dehydrated/config
 
-- name: create consul-template directory for letsencrypt
-  file:
-    path: "{{ consul_template_root }}/{{ letsencrypt_consul_template_prefix }}"
-    state: directory
-
-- name: copy letsencrypt consul-template files
-  with_items: "{{ letsencrypt_consul_templates }}"
+- name: copy letsencrypt_update script
   copy:
-    src: "{{ item.filename }}"
-    dest: "{{ consul_template_root }}/{{ letsencrypt_consul_template_prefix }}/{{ item.filename }}"
+    src: letsencrypt_update.sh
+    dest: /usr/local/bin/letsencrypt_update.sh
+    mode: 0700
 
 - name: copy letsencrypt hook
   with_items: "{{ letsencrypt_hook }}"
@@ -32,24 +32,19 @@
     dest: "{{ item.destination }}/{{ item.filename }}"
     mode: 0700
 
-- name: create consul-template dir
-  file:
-    path: /usr/local/etc/consul-template.d
-    state: directory
-
-- name: configure consul-template for letsencrypt
-  template:
-    src: letsencrypt.consul.j2
-    dest: /usr/local/etc/consul-template.d/letsencrypt.conf
-
 - name: register letsencrypt
   command: dehydrated --register --accept-terms
   args:
-    creates: /usr/local/bin/accounts
+    creates: /usr/local/etc/dehydrated/accounts
 
-- name: setup letsencrypt cron
-  cron:
-    name: "letsencrypt"
-    special_time: weekly
-    job: "/usr/local/etc/periodic/weekly/900-dehydrated"
+- name: check if secret file exists
+  stat:
+    path: /usr/local/etc/letsencrypt_domains.txt
+  register: secret_result
 
+- name: create secret file if it does not exists
+  template:
+    src: letsencrypt_domains.txt.j2
+    dest: /usr/local/etc/letsencrypt_domains.txt
+    mode: 0600
+  when: secret_result.stat.exists == False

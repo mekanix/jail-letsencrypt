@@ -3,7 +3,7 @@
 deploy_challenge() {
     local DOMAIN="${1}" TOKEN_FILENAME="${2}" TOKEN_VALUE="${3}"
 
-    lexicon $PROVIDER create ${DOMAIN} TXT --name="_acme-challenge.${DOMAIN}." --content="${TOKEN_VALUE}"
+    lexicon-3.6 $PROVIDER create ${DOMAIN} TXT --name="_acme-challenge.${DOMAIN}." --content="${TOKEN_VALUE}"
     sleep 10
 
 
@@ -32,7 +32,7 @@ clean_challenge() {
     local DOMAIN="${1}" TOKEN_FILENAME="${2}" TOKEN_VALUE="${3}"
 
     echo "clean_challenge called: ${DOMAIN}, ${TOKEN_FILENAME}, ${TOKEN_VALUE}"
-    lexicon $PROVIDER delete ${DOMAIN} TXT --name="_acme-challenge.${DOMAIN}." --content="${TOKEN_VALUE}"
+    lexicon-3.6 $PROVIDER delete ${DOMAIN} TXT --name="_acme-challenge.${DOMAIN}." --content="${TOKEN_VALUE}"
 
     # This hook is called after attempting to validate each domain,
     # whether or not validation was successful. Here you can delete
@@ -46,11 +46,6 @@ clean_challenge() {
 
 deploy_cert() {
     local DOMAIN="${1}" KEYFILE="${2}" CERTFILE="${3}" FULLCHAINFILE="${4}" CHAINFILE="${5}" TIMESTAMP="${6}"
-
-    curl -X PUT --data-bin @"${KEYFILE}" "http://consul:8500/v1/kv/letsencrypt/${DOMAIN}/privkey"
-    curl -X PUT --data-bin @"${CERTFILE}" "http://consul:8500/v1/kv/letsencrypt/${DOMAIN}/cert"
-    curl -X PUT --data-bin @"${FULLCHAINFILE}" "http://consul:8500/v1/kv/letsencrypt/${DOMAIN}/fullchain"
-    curl -X PUT --data-bin @"${CHAINFILE}" "http://consul:8500/v1/kv/letsencrypt/${DOMAIN}/chain"
 
     # This hook is called once for each certificate that has been
     # produced. Here you might, for instance, copy your new certificates
