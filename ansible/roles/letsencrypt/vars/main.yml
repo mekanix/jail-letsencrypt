@@ -1,8 +1,8 @@
 ---
 letsencrypt_packages:
   - name: dehydrated
-  - name: py37-dns-lexicon
-  - name: py37-dnspython
+  - name: "{{ python_prefix }}-dns-lexicon"
+  - name: {{ python_prefix }}-dnspython
 
 letsencrypt_hook:
   - destination: /usr/local/etc/dehydrated
