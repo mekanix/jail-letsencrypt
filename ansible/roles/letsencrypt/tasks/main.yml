@@ -4,47 +4,25 @@
   package:
     name: "{{ item.name }}"
 
-- name: create per-domain config root
+- name: register letsencrypt
+  command: acme.sh --register-account -m "{{ letsencrypt_account }}" --home /root/.acme.sh
+  args:
+    creates: /root/.acme.sh
+
+- name: create dnsapi link
   file:
-    path: /usr/local/etc/dehydrated/conf.d
-    state: directory
+    src: /usr/local/share/examples/acme.sh/dnsapi
+    dest: /root/.acme.sh/dnsapi
+    state: link
+    force: yes
 
 - name: create certs directory
   file:
-    path: /usr/local/etc/dehydrated/certs
+    path: /etc/certs
     state: directory
 
-- name: copy letsencrypt config
-  copy:
-    src: config
-    dest: /usr/local/etc/dehydrated/config
-
-- name: copy letsencrypt_update script
-  copy:
-    src: letsencrypt_update.sh
-    dest: /usr/local/bin/letsencrypt_update.sh
-    mode: 0700
-
-- name: copy letsencrypt hook
-  with_items: "{{ letsencrypt_hook }}"
-  copy:
-    src: "{{ item.filename }}"
-    dest: "{{ item.destination }}/{{ item.filename }}"
-    mode: 0700
-
-- name: register letsencrypt
-  command: dehydrated --register --accept-terms
-  args:
-    creates: /usr/local/etc/dehydrated/accounts
-
-- name: check if secret file exists
-  stat:
-    path: /usr/local/etc/letsencrypt_domains.txt
-  register: secret_result
-
-- name: create secret file if it does not exists
-  template:
-    src: letsencrypt_domains.txt.j2
-    dest: /usr/local/etc/letsencrypt_domains.txt
-    mode: 0600
-  when: secret_result.stat.exists == False
+- name: install cron job
+  cron:
+    name: "acme.sh"
+    special_time: daily
+    job: '/usr/local/sbin/acme.sh --cron --home "/root/.acme.sh"'
